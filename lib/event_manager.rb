@@ -9,6 +9,18 @@ def clean_zipcode(zipcode)
   (zipcode || '').rjust(5, '0')[0..4]
 end
 
+def remove_non_numeric(string)
+  string.delete('^0-9')
+end
+
+def good_phone_number?(number)
+  return false if number.length < 10 || number.length > 11
+
+  return false if number.length == 11 && !number.start_with?('1')
+
+  true
+end
+
 def create_civic_info_access(key)
   civic_info = Google::Apis::CivicinfoV2::CivicInfoService.new
   civic_info.key = key
@@ -46,6 +58,10 @@ template_letter = File.read(template_filename)
 erb_template = ERB.new template_letter
 
 CSV.open(csv_filename, headers: true, header_converters: :symbol).each do |row|
+  
+  phone_number = remove_non_numeric(row[:homephone])
+  good_number = good_phone_number? phone_number
+  
   id = row[0]
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
