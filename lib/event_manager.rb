@@ -3,6 +3,8 @@
 require 'csv'
 require 'google/apis/civicinfo_v2'
 require 'erb'
+require 'date'
+require 'time'
 
 
 def clean_zipcode(zipcode)
@@ -46,6 +48,14 @@ def save_thank_you_letter(id, form_letter)
   File.open(filename, 'w') { |file| file.puts form_letter }
 end
 
+def calculate_peak_hour(array)
+  h = array.reduce(Hash.new(0)) do |hash, h|
+    hash[h] += 1
+    hash
+  end
+  h.max_by { |key, val| val}[0]
+end
+
 puts 'EventManager initialized'
 
 csv_filename = 'event_attendees.csv'
@@ -57,8 +67,16 @@ exit unless File.exist? template_filename
 template_letter = File.read(template_filename)
 erb_template = ERB.new template_letter
 
+hours = []
 CSV.open(csv_filename, headers: true, header_converters: :symbol).each do |row|
   
+  # time targeting
+  reg_date = row[:regdate]
+  reg_time = Time.strptime(reg_date, '%m/%d/%y %H:%M')
+  hours.push(reg_time.hour)
+
+  next
+  # clean  phone numbers
   phone_number = remove_non_numeric(row[:homephone])
   good_number = good_phone_number? phone_number
   
@@ -72,3 +90,5 @@ CSV.open(csv_filename, headers: true, header_converters: :symbol).each do |row|
   save_thank_you_letter(id, form_letter)
 
 end
+
+p calculate_peak_hour(hours)
