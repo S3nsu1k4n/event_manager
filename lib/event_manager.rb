@@ -56,6 +56,11 @@ def calculate_peak_hour(array)
   h.max_by { |key, val| val}[0]
 end
 
+def calculate_peak_weekday(array)
+  # 0 -> Sunday
+  calculate_peak_hour(array)
+end
+
 puts 'EventManager initialized'
 
 csv_filename = 'event_attendees.csv'
@@ -68,12 +73,14 @@ template_letter = File.read(template_filename)
 erb_template = ERB.new template_letter
 
 hours = []
+wdays = []
 CSV.open(csv_filename, headers: true, header_converters: :symbol).each do |row|
   
   # time targeting
   reg_date = row[:regdate]
   reg_time = Time.strptime(reg_date, '%m/%d/%y %H:%M')
   hours.push(reg_time.hour)
+  wdays.push(reg_time.wday)
 
   next
   # clean  phone numbers
@@ -92,3 +99,4 @@ CSV.open(csv_filename, headers: true, header_converters: :symbol).each do |row|
 end
 
 p calculate_peak_hour(hours)
+p calculate_peak_weekday(wdays)
